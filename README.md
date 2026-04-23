@@ -1,4 +1,4 @@
-# 🎓 EduPlatform AI
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/dca2160c-f151-488e-81fe-61f1dce907f8" /># 🎓 EduPlatform AI
 
 ### 🚀 Multimodal Learning • 🤖 Multi-Agent AI • ☁️ Cloud Deployed
 
@@ -9,9 +9,7 @@
 
 ## 🌐 Live Demo
 
-```
 🌐 http://13.49.145.251:8501
-```
 
 ---
 
