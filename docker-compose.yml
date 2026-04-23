@@ -1,5 +1,5 @@
 # EduPlatform AI — Docker Compose (local dev)
-# From: nameisankit/education-app (DevOps layer)
+
 version: "3.8"
 
 services:
@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: eduplatform-ai:latest
+    image: edu-platform:latest
     container_name: eduplatform
     ports:
       - "8501:8501"
