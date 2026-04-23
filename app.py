@@ -152,8 +152,8 @@ with st.sidebar:
 
 
 # ── Main content ──────────────────────────────────────────────────────────────
-if st.session_state.memory is None:
-    # Landing state
+def show_landing_state():
+    """Display landing state when no topic is selected."""
     col1, col2, col3 = st.columns(3)
     with col1:
         st.info(
@@ -177,144 +177,165 @@ if st.session_state.memory is None:
     st.markdown("---")
     st.markdown("### 👈 Enter a topic in the sidebar and click **Start Learning!**")
 
-else:
-    memory = st.session_state.memory
 
-    # Tabs
+def show_curriculum_tab(memory):
+    """Display curriculum tab content."""
+    st.subheader(f"📋 Learning Roadmap: {memory.topic}")
+    col_a, col_b = st.columns([2, 1])
+    with col_a:
+        st.markdown(memory.curriculum)
+    with col_b:
+        if memory.structured_content:
+            st.subheader("🎯 Key Points")
+            for pt in memory.structured_content.get("key_points", []):
+                st.markdown(f"• {pt}")
+
+
+def show_lesson_tab(memory):
+    """Display lesson tab content."""
+    st.subheader(f"📖 Lesson: {memory.topic}")
+    if memory.structured_content.get("explanation"):
+        with st.expander("🤖 GenAI Quick Overview", expanded=False):
+            st.write(memory.structured_content["explanation"])
+    st.markdown("---")
+    st.markdown(memory.lesson)
+
+
+def show_visual_tab(memory):
+    """Display visual tab content."""
+    st.subheader("🖼️ AI-Generated Visual")
+    if st.session_state.image is not None:
+        st.image(st.session_state.image, caption=f"Visual: {memory.topic}", use_container_width=True)
+    else:
+        st.info("Enable '🖼️ Generate Visual' in the sidebar and re-run to get an AI image.")
+
+    if memory.image_prompt:
+        with st.expander("📝 Image Prompt Used"):
+            st.code(memory.image_prompt)
+
+
+def show_quiz_tab(memory):
+    """Display quiz tab content."""
+    st.subheader(f"❓ Knowledge Check: {memory.topic}")
+
+    quiz = memory.quiz
+    questions = quiz.get("questions", [])
+
+    if not questions:
+        st.warning("No quiz questions generated.")
+        return
+
+    if not st.session_state.quiz_submitted:
+        with st.form("quiz_form"):
+            for q in questions:
+                st.markdown(f"**Q{q['id']}. {q['question']}**")
+
+                if q["type"] == "mcq":
+                    opts = q.get("options", [])
+                    choice = st.radio(
+                        f"Select answer for Q{q['id']}",
+                        opts,
+                        key=f"q{q['id']}",
+                        label_visibility="collapsed"
+                    )
+                    st.session_state.mcq_answers[q["id"]] = choice
+
+                elif q["type"] == "short_answer":
+                    ans = st.text_area(
+                        f"Your answer for Q{q['id']}",
+                        key=f"qa{q['id']}",
+                        label_visibility="collapsed",
+                        placeholder="Type your answer here..."
+                    )
+                    st.session_state.mcq_answers[q["id"]] = ans
+
+                st.divider()
+
+            submitted = st.form_submit_button("📤 Submit Quiz", type="primary")
+
+        if submitted:
+            answer_text = "\n".join([
+                f"Q{qid}: {ans}"
+                for qid, ans in st.session_state.mcq_answers.items()
+            ])
+
+            with st.spinner("🤔 Feedback Agent evaluating your answers..."):
+                updated_memory = st.session_state.pipeline.get_feedback(
+                    memory, answer_text
+                )
+                st.session_state.memory = updated_memory
+                st.session_state.feedback = updated_memory.feedback
+                st.session_state.quiz_submitted = True
+            st.rerun()
+    else:
+        st.success("Quiz submitted! Here's your feedback:")
+
+        for q in questions:
+            if q["type"] == "mcq":
+                pipeline = st.session_state.pipeline
+                selected = st.session_state.mcq_answers.get(q["id"], "")
+                result = pipeline.feedback_agent.evaluate_mcq(q, selected[:1] if selected else "")
+                icon = "✅" if result["correct"] else "❌"
+                st.markdown(f"{icon} **Q{q['id']}**: {q['question']}")
+                if not result["correct"]:
+                    st.caption(f"Correct: {result['correct_answer']} — {result['explanation']}")
+
+        st.divider()
+        st.subheader("🎯 Detailed Feedback")
+        st.markdown(st.session_state.feedback)
+
+        if st.button("🔄 Retake Quiz"):
+            st.session_state.quiz_submitted = False
+            st.session_state.mcq_answers = {}
+            st.rerun()
+
+
+def show_chat_tab(memory):
+    """Display chat tab content."""
+    st.subheader(f"💬 Ask the Tutor: {memory.topic}")
+    st.caption("Ask any follow-up questions about the lesson")
+
+    for msg in st.session_state.chat_messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    if user_q := st.chat_input("Ask a question about the lesson..."):
+        st.session_state.chat_messages.append({"role": "user", "content": user_q})
+        with st.chat_message("user"):
+            st.markdown(user_q)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Tutor is thinking..."):
+                answer = st.session_state.pipeline.tutor_chat(memory, user_q)
+            st.markdown(answer)
+
+        st.session_state.chat_messages.append({"role": "assistant", "content": answer})
+
+
+def show_main_content(memory):
+    """Display main content tabs when topic is selected."""
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📋 Curriculum", "📖 Lesson", "🖼️ Visual", "❓ Quiz", "💬 Ask Tutor"
     ])
 
-    # ── TAB 1: Curriculum ─────────────────────────────────────────────────────
     with tab1:
-        st.subheader(f"📋 Learning Roadmap: {memory.topic}")
-        col_a, col_b = st.columns([2, 1])
-        with col_a:
-            st.markdown(memory.curriculum)
-        with col_b:
-            if memory.structured_content:
-                st.subheader("🎯 Key Points")
-                for pt in memory.structured_content.get("key_points", []):
-                    st.markdown(f"• {pt}")
+        show_curriculum_tab(memory)
 
-    # ── TAB 2: Lesson ─────────────────────────────────────────────────────────
     with tab2:
-        st.subheader(f"📖 Lesson: {memory.topic}")
-        if memory.structured_content.get("explanation"):
-            with st.expander("🤖 GenAI Quick Overview", expanded=False):
-                st.write(memory.structured_content["explanation"])
-        st.markdown("---")
-        st.markdown(memory.lesson)
+        show_lesson_tab(memory)
 
-    # ── TAB 3: Visual ─────────────────────────────────────────────────────────
     with tab3:
-        st.subheader("🖼️ AI-Generated Visual")
-        if st.session_state.image is not None:
-            st.image(st.session_state.image, caption=f"Visual: {memory.topic}", use_container_width=True)
-        else:
-            st.info("Enable '🖼️ Generate Visual' in the sidebar and re-run to get an AI image.")
+        show_visual_tab(memory)
 
-        if memory.image_prompt:
-            with st.expander("📝 Image Prompt Used"):
-                st.code(memory.image_prompt)
-
-    # ── TAB 4: Quiz ───────────────────────────────────────────────────────────
     with tab4:
-        st.subheader(f"❓ Knowledge Check: {memory.topic}")
+        show_quiz_tab(memory)
 
-        quiz = memory.quiz
-        questions = quiz.get("questions", [])
-
-        if not questions:
-            st.warning("No quiz questions generated.")
-        else:
-            if not st.session_state.quiz_submitted:
-                with st.form("quiz_form"):
-                    for q in questions:
-                        st.markdown(f"**Q{q['id']}. {q['question']}**")
-
-                        if q["type"] == "mcq":
-                            opts = q.get("options", [])
-                            choice = st.radio(
-                                f"Select answer for Q{q['id']}",
-                                opts,
-                                key=f"q{q['id']}",
-                                label_visibility="collapsed"
-                            )
-                            st.session_state.mcq_answers[q["id"]] = choice
-
-                        elif q["type"] == "short_answer":
-                            ans = st.text_area(
-                                f"Your answer for Q{q['id']}",
-                                key=f"qa{q['id']}",
-                                label_visibility="collapsed",
-                                placeholder="Type your answer here..."
-                            )
-                            st.session_state.mcq_answers[q["id"]] = ans
-
-                        st.divider()
-
-                    submitted = st.form_submit_button("📤 Submit Quiz", type="primary")
-
-                if submitted:
-                    # Build answer summary
-                    answer_text = "\n".join([
-                        f"Q{qid}: {ans}"
-                        for qid, ans in st.session_state.mcq_answers.items()
-                    ])
-
-                    with st.spinner("🤔 Feedback Agent evaluating your answers..."):
-                        updated_memory = st.session_state.pipeline.get_feedback(
-                            memory, answer_text
-                        )
-                        st.session_state.memory = updated_memory
-                        st.session_state.feedback = updated_memory.feedback
-                        st.session_state.quiz_submitted = True
-                    st.rerun()
-
-            else:
-                # Show results
-                st.success("Quiz submitted! Here's your feedback:")
-
-                # Quick MCQ results
-                for q in questions:
-                    if q["type"] == "mcq":
-                        pipeline = st.session_state.pipeline
-                        selected = st.session_state.mcq_answers.get(q["id"], "")
-                        result = pipeline.feedback_agent.evaluate_mcq(q, selected[:1] if selected else "")
-                        icon = "✅" if result["correct"] else "❌"
-                        st.markdown(f"{icon} **Q{q['id']}**: {q['question']}")
-                        if not result["correct"]:
-                            st.caption(f"Correct: {result['correct_answer']} — {result['explanation']}")
-
-                st.divider()
-                st.subheader("🎯 Detailed Feedback")
-                st.markdown(st.session_state.feedback)
-
-                if st.button("🔄 Retake Quiz"):
-                    st.session_state.quiz_submitted = False
-                    st.session_state.mcq_answers = {}
-                    st.rerun()
-
-    # ── TAB 5: Chat ───────────────────────────────────────────────────────────
     with tab5:
-        st.subheader(f"💬 Ask the Tutor: {memory.topic}")
-        st.caption("Ask any follow-up questions about the lesson")
+        show_chat_tab(memory)
 
-        # Chat history display
-        for msg in st.session_state.chat_messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
 
-        # Chat input
-        if user_q := st.chat_input("Ask a question about the lesson..."):
-            st.session_state.chat_messages.append({"role": "user", "content": user_q})
-            with st.chat_message("user"):
-                st.markdown(user_q)
-
-            with st.chat_message("assistant"):
-                with st.spinner("Tutor is thinking..."):
-                    answer = st.session_state.pipeline.tutor_chat(memory, user_q)
-                st.markdown(answer)
-
-            st.session_state.chat_messages.append({"role": "assistant", "content": answer})
+if st.session_state.memory is None:
+    show_landing_state()
+else:
+    memory = st.session_state.memory
+    show_main_content(memory)
