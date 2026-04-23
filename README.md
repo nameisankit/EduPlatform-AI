@@ -9,8 +9,6 @@
 
 ## 🌐 Live Demo
 
-👉 Your deployed app:
-
 ```
 http://13.49.145.251:8501
 ```
@@ -98,7 +96,7 @@ edu-platform/
 
 ```bash
 # Clone repo
-git clone <your-repo-link>
+git clone https://github.com/nameisankit/education-app
 cd edu-platform
 
 # Install dependencies
