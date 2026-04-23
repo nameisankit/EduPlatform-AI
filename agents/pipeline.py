@@ -1,6 +1,5 @@
 """
 Agent Pipeline Orchestrator
-From: bhawsararya/Muti-Agent-Education-System (Agentic AI layer)
 
 Coordinates all agents in sequence: Curriculum → Tutor → Quiz → Feedback
 """

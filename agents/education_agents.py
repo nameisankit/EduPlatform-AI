@@ -1,6 +1,5 @@
 """
 Specialized Education Agents
-From: bhawsararya/Muti-Agent-Education-System (Agentic AI layer)
 
 Agents:
   1. CurriculumAgent   — Designs a learning roadmap

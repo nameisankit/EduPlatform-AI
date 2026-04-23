@@ -1,8 +1,8 @@
 """
 🌐 EduPlatform — Integrated AI Education System
 Combines:
-  • GenAI (Groq + Pollinations image gen)    [bhawsararya/Education]
-  • Multi-Agent AI Pipeline                   [bhawsararya/Muti-Agent-Education-System]
+  • GenAI (Groq + Pollinations image gen)   
+  • Multi-Agent AI Pipeline                  
   • DevOps (Docker + CI/CD + AWS)             [nameisankit/education-app]
 """
 import streamlit as st
@@ -214,6 +214,77 @@ def show_visual_tab(memory):
             st.code(memory.image_prompt)
 
 
+def show_quiz_form(questions):
+    """Display quiz form for user input."""
+    with st.form("quiz_form"):
+        for q in questions:
+            st.markdown(f"**Q{q['id']}. {q['question']}**")
+
+            if q["type"] == "mcq":
+                opts = q.get("options", [])
+                choice = st.radio(
+                    f"Select answer for Q{q['id']}",
+                    opts,
+                    key=f"q{q['id']}",
+                    label_visibility="collapsed"
+                )
+                st.session_state.mcq_answers[q["id"]] = choice
+
+            elif q["type"] == "short_answer":
+                ans = st.text_area(
+                    f"Your answer for Q{q['id']}",
+                    key=f"qa{q['id']}",
+                    label_visibility="collapsed",
+                    placeholder="Type your answer here..."
+                )
+                st.session_state.mcq_answers[q["id"]] = ans
+
+            st.divider()
+
+        return st.form_submit_button("📤 Submit Quiz", type="primary")
+
+
+def submit_quiz(memory):
+    """Handle quiz submission and get feedback."""
+    answer_text = "\n".join([
+        f"Q{qid}: {ans}"
+        for qid, ans in st.session_state.mcq_answers.items()
+    ])
+
+    with st.spinner("🤔 Feedback Agent evaluating your answers..."):
+        updated_memory = st.session_state.pipeline.get_feedback(
+            memory, answer_text
+        )
+        st.session_state.memory = updated_memory
+        st.session_state.feedback = updated_memory.feedback
+        st.session_state.quiz_submitted = True
+    st.rerun()
+
+
+def show_quiz_results(questions):
+    """Display quiz results after submission."""
+    st.success("Quiz submitted! Here's your feedback:")
+
+    for q in questions:
+        if q["type"] == "mcq":
+            pipeline = st.session_state.pipeline
+            selected = st.session_state.mcq_answers.get(q["id"], "")
+            result = pipeline.feedback_agent.evaluate_mcq(q, selected[:1] if selected else "")
+            icon = "✅" if result["correct"] else "❌"
+            st.markdown(f"{icon} **Q{q['id']}**: {q['question']}")
+            if not result["correct"]:
+                st.caption(f"Correct: {result['correct_answer']} — {result['explanation']}")
+
+    st.divider()
+    st.subheader("🎯 Detailed Feedback")
+    st.markdown(st.session_state.feedback)
+
+    if st.button("🔄 Retake Quiz"):
+        st.session_state.quiz_submitted = False
+        st.session_state.mcq_answers = {}
+        st.rerun()
+
+
 def show_quiz_tab(memory):
     """Display quiz tab content."""
     st.subheader(f"❓ Knowledge Check: {memory.topic}")
@@ -226,68 +297,11 @@ def show_quiz_tab(memory):
         return
 
     if not st.session_state.quiz_submitted:
-        with st.form("quiz_form"):
-            for q in questions:
-                st.markdown(f"**Q{q['id']}. {q['question']}**")
-
-                if q["type"] == "mcq":
-                    opts = q.get("options", [])
-                    choice = st.radio(
-                        f"Select answer for Q{q['id']}",
-                        opts,
-                        key=f"q{q['id']}",
-                        label_visibility="collapsed"
-                    )
-                    st.session_state.mcq_answers[q["id"]] = choice
-
-                elif q["type"] == "short_answer":
-                    ans = st.text_area(
-                        f"Your answer for Q{q['id']}",
-                        key=f"qa{q['id']}",
-                        label_visibility="collapsed",
-                        placeholder="Type your answer here..."
-                    )
-                    st.session_state.mcq_answers[q["id"]] = ans
-
-                st.divider()
-
-            submitted = st.form_submit_button("📤 Submit Quiz", type="primary")
-
+        submitted = show_quiz_form(questions)
         if submitted:
-            answer_text = "\n".join([
-                f"Q{qid}: {ans}"
-                for qid, ans in st.session_state.mcq_answers.items()
-            ])
-
-            with st.spinner("🤔 Feedback Agent evaluating your answers..."):
-                updated_memory = st.session_state.pipeline.get_feedback(
-                    memory, answer_text
-                )
-                st.session_state.memory = updated_memory
-                st.session_state.feedback = updated_memory.feedback
-                st.session_state.quiz_submitted = True
-            st.rerun()
+            submit_quiz(memory)
     else:
-        st.success("Quiz submitted! Here's your feedback:")
-
-        for q in questions:
-            if q["type"] == "mcq":
-                pipeline = st.session_state.pipeline
-                selected = st.session_state.mcq_answers.get(q["id"], "")
-                result = pipeline.feedback_agent.evaluate_mcq(q, selected[:1] if selected else "")
-                icon = "✅" if result["correct"] else "❌"
-                st.markdown(f"{icon} **Q{q['id']}**: {q['question']}")
-                if not result["correct"]:
-                    st.caption(f"Correct: {result['correct_answer']} — {result['explanation']}")
-
-        st.divider()
-        st.subheader("🎯 Detailed Feedback")
-        st.markdown(st.session_state.feedback)
-
-        if st.button("🔄 Retake Quiz"):
-            st.session_state.quiz_submitted = False
-            st.session_state.mcq_answers = {}
-            st.rerun()
+        show_quiz_results(questions)
 
 
 def show_chat_tab(memory):

@@ -1,6 +1,6 @@
 """
 Core LLM module - Groq (Llama3) integration
-From: bhawsararya/Education (GenAI layer)
+
 """
 import os
 from groq import Groq

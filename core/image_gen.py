@@ -1,6 +1,6 @@
 """
 Image generation module - Pollinations.ai (Free, no API key required)
-From: bhawsararya/Education (GenAI layer)
+
 """
 import io
 import requests
