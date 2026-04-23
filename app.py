@@ -1,9 +1,9 @@
 """
 🌐 EduPlatform — Integrated AI Education System
 Combines:
-  • GenAI (Groq + Pollinations image gen)   
-  • Multi-Agent AI Pipeline                  
-  • DevOps (Docker + CI/CD + AWS)             [nameisankit/education-app]
+  • GenAI (Groq + Pollinations image gen)
+  • Multi-Agent AI Pipeline
+  • DevOps (Docker + CI/CD + AWS) [nameisankit/education-app]
 """
 import streamlit as st
 
