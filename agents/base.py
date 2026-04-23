@@ -3,7 +3,6 @@ Agent base class and shared utilities
 From: bhawsararya/Muti-Agent-Education-System (Agentic AI layer)
 """
 from dataclasses import dataclass, field
-from typing import Any
 from core.llm import generate_content
 
 

@@ -23,17 +23,17 @@ class CurriculumAgent(BaseAgent):
     def run(self, memory: AgentMemory) -> AgentMemory:
         prompt = f"""
         You are an expert curriculum designer.
-        
+
         Topic: {memory.topic}
         Student Level: {memory.student_level}
-        
+
         Design a structured learning roadmap with:
         1. Prerequisites (what to know before)
         2. Learning Objectives (3-5 clear goals)
         3. Module Outline (4 modules with names and brief descriptions)
         4. Estimated Time (per module)
         5. Recommended Resources (types, not specific links)
-        
+
         Be practical, structured, and appropriate for the level.
         """
         memory.curriculum = self._llm(prompt)
@@ -53,27 +53,27 @@ class TutorAgent(BaseAgent):
         prompt = f"""
         You are a world-class tutor teaching: "{memory.topic}"
         Student Level: {memory.student_level}
-        
+
         Curriculum Context:
         {memory.curriculum[:500] if memory.curriculum else "Not available"}
-        
+
         Deliver a rich, engaging lesson that includes:
-        
+
         ## 📖 Introduction
         Hook the student with a real-world application or analogy.
-        
+
         ## 🧠 Core Concepts
         Explain the 3-4 most important concepts clearly with examples.
-        
+
         ## 💡 Worked Example
         Walk through a concrete, step-by-step example.
-        
+
         ## 🔗 Connections
         Connect this topic to related ideas the student might already know.
-        
+
         ## 📝 Summary
         Concise 3-sentence recap of what was covered.
-        
+
         Use Markdown formatting. Be engaging and clear.
         """
         memory.lesson = self._llm(prompt)
@@ -86,12 +86,12 @@ class TutorAgent(BaseAgent):
         )
         prompt = f"""
         You are a patient tutor. The student is learning about: "{memory.topic}"
-        
+
         Conversation history:
         {history_str}
-        
+
         Student question: {question}
-        
+
         Answer helpfully, using examples. If off-topic, gently redirect.
         """
         answer = self._llm(prompt)
@@ -112,9 +112,9 @@ class QuizAgent(BaseAgent):
     def run(self, memory: AgentMemory) -> AgentMemory:
         prompt = f"""
         You are an assessment specialist. Based on this lesson about "{memory.topic}":
-        
+
         {memory.lesson[:800] if memory.lesson else memory.topic}
-        
+
         Generate a quiz with exactly this JSON structure (return ONLY valid JSON):
         {{
           "questions": [
@@ -143,10 +143,11 @@ class QuizAgent(BaseAgent):
             }}
           ]
         }}
-        
+
         Level: {memory.student_level}. Make questions test real understanding, not just memory.
         """
-        import json, re
+        import json
+        import re
         raw = self._llm(prompt)
         # Strip markdown code fences if present
         raw = re.sub(r"```json|```", "", raw).strip()
@@ -181,30 +182,30 @@ class FeedbackAgent(BaseAgent):
         quiz_str = str(memory.quiz)[:600]
         prompt = f"""
         You are a supportive learning coach evaluating a student's quiz response.
-        
+
         Topic: {memory.topic}
         Student Level: {memory.student_level}
-        
+
         Quiz Questions:
         {quiz_str}
-        
+
         Student's Answer:
         {memory.student_answer}
-        
+
         Provide feedback that includes:
-        
+
         ## ✅ What You Got Right
         Acknowledge correct understanding.
-        
+
         ## 🔧 Areas to Improve
         Identify gaps clearly but kindly.
-        
+
         ## 💡 Deeper Insights
         Add 1-2 insights that extend their understanding.
-        
+
         ## 🎯 Next Steps
         Suggest 2 specific things to study next.
-        
+
         Score: X/10 with brief justification.
         Be encouraging and constructive.
         """

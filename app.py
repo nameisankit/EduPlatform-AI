@@ -6,7 +6,6 @@ Combines:
   • DevOps (Docker + CI/CD + AWS)             [nameisankit/education-app]
 """
 import streamlit as st
-import json
 
 # ── Page config ────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -157,11 +156,23 @@ if st.session_state.memory is None:
     # Landing state
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.info("**🤖 GenAI Layer**\n\nGroq (Llama3) generates structured explanations and Pollinations.ai creates visual diagrams for every topic.")
+        st.info(
+            "**🤖 GenAI Layer**\n\n"
+            "Groq (Llama3) generates structured explanations "
+            "and Pollinations.ai creates visual diagrams for every topic."
+        )
     with col2:
-        st.info("**🤝 Multi-Agent Layer**\n\nFour specialized AI agents collaborate: Curriculum Designer → Tutor → Quiz Master → Learning Coach.")
+        st.info(
+            "**🤝 Multi-Agent Layer**\n\n"
+            "Four specialized AI agents collaborate: "
+            "Curriculum Designer → Tutor → Quiz Master → Learning Coach."
+        )
     with col3:
-        st.info("**🚀 DevOps Layer**\n\nDockerized, CI/CD via GitHub Actions, auto-deployed to AWS EC2 on every push to main.")
+        st.info(
+            "**🚀 DevOps Layer**\n\n"
+            "Dockerized, CI/CD via GitHub Actions, "
+            "auto-deployed to AWS EC2 on every push to main."
+        )
 
     st.markdown("---")
     st.markdown("### 👈 Enter a topic in the sidebar and click **Start Learning!**")

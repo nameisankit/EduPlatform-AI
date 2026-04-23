@@ -2,7 +2,6 @@
 Image generation module - Pollinations.ai (Free, no API key required)
 From: bhawsararya/Education (GenAI layer)
 """
-import os
 import io
 import requests
 from PIL import Image
@@ -20,10 +19,10 @@ def generate_image(prompt: str, topic: str = "") -> Image.Image | None:
         f"Topic: {topic}. {prompt}. "
         f"High quality, detailed, suitable for learning material."
     )
-    
+
     # Pollinations.ai API - completely free, no API key needed
     url = f"https://image.pollinations.ai/prompt/{enhanced_prompt}?width=800&height=600&nologo=true"
-    
+
     try:
         response = requests.get(url, timeout=60)
         if response.status_code == 200:
@@ -32,5 +31,5 @@ def generate_image(prompt: str, topic: str = "") -> Image.Image | None:
             print(f"Pollinations.ai error: {response.status_code}")
     except Exception as e:
         print(f"Image generation error: {e}")
-    
+
     return None
