@@ -1,148 +1,202 @@
-# 🎓 EduPlatform AI — Spring Boot + Spring AI
+# 🚀 EduPlatform AI — Spring Boot Backend
 
-### 🚀 Multimodal Learning • 🤖 Multi-Agent AI • ☁️ Cloud Deployed
-
-> **Python/Streamlit + Groq → Spring Boot 3 + Spring AI**
-> Same features, same UI, enterprise-grade Java backend.
+AI-powered educational backend platform built using **Spring Boot 3**, **Java 21**, and external AI APIs using **HTTP Client integration**.
 
 ---
 
-## 🔄 Tech Conversion
+# ✨ Features
 
-| Original (Python) | This Version (Java) |
-|---|---|
-| Python 3.11 | Java 21 |
-| Streamlit | Spring Boot 3.3 + Thymeleaf |
-| Groq via `groq` SDK | Spring AI (`spring-ai-openai`) with Groq base URL |
-| Agent classes in `agents/` | Spring `@Service` beans |
-| `session_state` dict | `HttpSession` |
-| `st.spinner` | CSS loading overlay + JS |
-| `st.tabs` | CSS/JS tabs |
-| `st.chat_input` | AJAX fetch + dynamic DOM |
-| Pollinations image gen | Same URL (no change needed) |
-| `requirements.txt` | `pom.xml` |
+* 🤖 AI-powered quiz generation
+* 📚 Learning session management
+* 📈 User progress tracking
+* 💬 Chat-based educational interactions
+* 🧠 Multi-agent style architecture
+* 🗄️ Persistent session storage
+* ⚡ External AI API integration using HTTP Client
+* 🌐 RESTful APIs
+* 🐳 Docker support
+* ☁️ Cloud deployment ready
 
 ---
 
-## 🧠 Architecture
-
-```
-User Input (Topic + Level)
-          │
-          ▼
-🤖 Spring AI (Groq LLM via OpenAI-compatible API)
-          │
-          ▼
-🧠 Multi-Agent Pipeline (Spring @Service)
-  ├── CurriculumAgent  — 📋 Builds roadmap
-  ├── TutorAgent       — 📖 Delivers lesson + chat
-  ├── QuizAgent        — ❓ Creates questions
-  └── FeedbackAgent    — ✅ Evaluates answers
-          │
-          ▼
-💻 Thymeleaf UI (same look & feel as Streamlit)
-          │
-          ▼
-☁️ Docker + GitHub Actions + AWS EC2
-```
-
----
-
-## ⚡ Quick Start (Local)
+# 🏗️ Project Structure
 
 ```bash
-# Clone
-git clone <your-repo>
-cd eduplatform-springboot
-
-# Set your Groq API key
-export GROQ_API_KEY=your_key_here
-
-# Run
-./mvnw spring-boot:run
+eduplatform-springboot/
+│
+├── .github/                     # GitHub workflows
+├── data/                        # Application data
+│
+├── src/
+│   └── main/
+│       ├── java/com/eduplatform/
+│       │
+│       │   ├── controller/      # REST Controllers
+│       │   ├── service/         # Business Logic
+│       │   ├── repository/      # JPA Repositories
+│       │   ├── model/           # Entity Classes / DTOs
+│       │   ├── util/            # Utility Classes
+│       │   ├── config/          # Configurations
+│       │   │
+│       │   └── EduPlatformApplication.java
+│       │
+│       └── resources/
+│           └── application.properties
+│
+├── Dockerfile
+├── docker-compose.yml
+├── pom.xml
+├── render.yaml
+└── README.md
 ```
-
-Open: http://localhost:8080
 
 ---
 
-## 🐳 Docker
+# 🛠️ Tech Stack
+
+| Technology      | Usage                 |
+| --------------- | --------------------- |
+| Java 21         | Backend Development   |
+| Spring Boot 3   | Backend Framework     |
+| Spring Data JPA | Database Layer        |
+| Hibernate       | ORM                   |
+| Maven           | Dependency Management |
+| HTTP Client     | External AI API Calls |
+| Docker          | Containerization      |
+
+---
+
+# 🤖 AI Integration
+
+This project does not use Spring AI.
+
+AI functionality is implemented using:
+
+* Java HTTP Client / REST calls
+* External AI model APIs
+* Custom service-layer integration
+
+---
+
+# 🚀 Getting Started
+
+## 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/nameisankit/EduPlatform-AI.git
+cd EduPlatform-AI
+```
+
+---
+
+## 2️⃣ Configure Application
+
+Update `application.properties`
+
+```properties
+server.port=8080
+```
+
+Add your external AI API configuration if needed.
+
+---
+
+## 3️⃣ Run Application
+
+```bash
+mvn clean install
+mvn spring-boot:run
+```
+
+Application runs at:
+
+```bash
+http://localhost:8080
+```
+
+---
+
+# 🐳 Docker Setup
+
+## Build Docker Image
 
 ```bash
 docker build -t eduplatform-ai .
-docker run -d -p 8080:8080 \
-  -e GROQ_API_KEY=your_key_here \
-  eduplatform-ai
 ```
 
----
-
-## ☁️ AWS EC2 Deploy
+## Run Container
 
 ```bash
-docker run -d -p 8080:8080 \
-  -e GROQ_API_KEY=your_key_here \
-  yourdockerhub/eduplatform-ai-spring:latest
+docker run -p 8080:8080 eduplatform-ai
 ```
 
 ---
 
-## 🔐 Environment Variables
+# ☁️ Deployment
 
-| Variable | Required | Purpose |
-|---|---|---|
-| `GROQ_API_KEY` | ✅ Yes | AI text generation via Groq |
+Supported deployment platforms:
 
----
+* Render
+* Railway
+* VPS
+* Docker
+* AWS
 
-## 📁 Project Structure
+Using:
 
-```
-eduplatform-springboot/
-├── pom.xml                              # Maven dependencies
-├── Dockerfile                           # Docker build
-├── docker-compose.yml                   # Docker Compose
-│
-├── src/main/java/com/eduplatform/
-│   ├── EduPlatformApplication.java      # 🎯 Spring Boot entry point
-│   ├── controller/
-│   │   └── EduController.java           # HTTP routes (replaces Streamlit routing)
-│   ├── service/
-│   │   ├── EducationPipeline.java       # 🧠 Agent orchestrator
-│   │   ├── CurriculumAgent.java         # 📋 Curriculum Agent
-│   │   ├── TutorAgent.java              # 📖 Tutor Agent + Chat
-│   │   ├── QuizAgent.java               # ❓ Quiz Agent
-│   │   └── FeedbackAgent.java           # ✅ Feedback Agent
-│   └── model/
-│       └── LearningMemory.java          # Data model (replaces Python memory object)
-│
-├── src/main/resources/
-│   ├── application.properties           # Spring AI / Groq config
-│   ├── templates/
-│   │   └── index.html                   # Thymeleaf UI (mirrors Streamlit app.py UI)
-│   └── static/
-│       ├── css/style.css                # Same visual style as Streamlit
-│       └── js/app.js                    # Tabs, markdown, chat AJAX
-│
-└── .github/workflows/cicd.yml           # CI/CD (same pipeline as original)
+```bash
+render.yaml
 ```
 
 ---
 
-## 🤖 Spring AI Configuration (Groq)
+# 📡 Architecture
 
-Groq is OpenAI-compatible. In `application.properties`:
-
-```properties
-spring.ai.openai.api-key=${GROQ_API_KEY}
-spring.ai.openai.base-url=https://api.groq.com/openai
-spring.ai.openai.chat.options.model=llama3-8b-8192
+```text
+Client
+   ↓
+REST Controllers
+   ↓
+Service Layer
+   ↓
+AI API Integration
+   ↓
+Repositories
+   ↓
+Database
 ```
-
-Spring AI's `ChatClient` handles all LLM calls — no manual HTTP needed.
 
 ---
 
-## 👨‍💻 Author
+# 🔥 Future Improvements
 
-**Ankit Parmar** — DevOps + GenAI + Full Stack
+* 🎤 Voice-based AI learning
+* 📄 PDF support
+* 📹 Video summarization
+* 🌍 Multi-language support
+* 📱 Mobile integration
+
+---
+
+# 👨‍💻 Author
+
+## Ankit Parmar
+
+* Java Full Stack Developer
+* Spring Boot Developer
+* Backend Developer
+
+GitHub:
+https://github.com/nameisankit
+
+---
+
+# ⭐ Support
+
+If you like this project:
+
+* ⭐ Star the repository
+* 🍴 Fork the project
+* 🛠️ Contribute
+
+---
