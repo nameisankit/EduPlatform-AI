@@ -11,11 +11,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Handles persistent storage of learning sessions and gamification
@@ -118,24 +118,53 @@ public class SessionPersistenceService {
     }
 
     // ─── User Progress / Gamification ────────────────────────────────────────
+    @Transactional
     public UserProgressEntity getUserProgress() {
-        return userProgressRepository.findByUsername(DEFAULT_USER)
-                .orElseGet(() -> {
-                    UserProgressEntity progress = UserProgressEntity.builder()
-                            .username(DEFAULT_USER)
-                            .totalPoints(0)
-                            .totalSessions(0)
-                            .totalCorrectAnswers(0)
-                            .totalQuestions(0)
-                            .currentStreak(0)
-                            .longestStreak(0)
-                            .lastActiveDate(LocalDate.now())
-                            .allBadgesJson("[]")
-                            .createdAt(LocalDate.now())
-                            .updatedAt(LocalDate.now())
-                            .build();
-                    return userProgressRepository.save(progress);
-                });
+        try {
+            // Step 1: Clean up duplicates first (keeps lowest ID row)
+            userProgressRepository.deleteDuplicatesByUsername(DEFAULT_USER);
+
+            // Step 2: Fetch remaining (should be 0 or 1 now)
+            List<UserProgressEntity> results = userProgressRepository.findAllByUsername(DEFAULT_USER);
+
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+
+            // Step 3: Create fresh record if none exists
+            UserProgressEntity progress = UserProgressEntity.builder()
+                    .username(DEFAULT_USER)
+                    .totalPoints(0)
+                    .totalSessions(0)
+                    .totalCorrectAnswers(0)
+                    .totalQuestions(0)
+                    .currentStreak(0)
+                    .longestStreak(0)
+                    .lastActiveDate(LocalDate.now())
+                    .allBadgesJson("[]")
+                    .createdAt(LocalDate.now())
+                    .updatedAt(LocalDate.now())
+                    .build();
+
+            return userProgressRepository.save(progress);
+
+        } catch (Exception e) {
+            log.error("Error fetching user progress: {}", e.getMessage(), e);
+            // Return a safe in-memory fallback so the page still loads
+            return UserProgressEntity.builder()
+                    .username(DEFAULT_USER)
+                    .totalPoints(0)
+                    .totalSessions(0)
+                    .totalCorrectAnswers(0)
+                    .totalQuestions(0)
+                    .currentStreak(0)
+                    .longestStreak(0)
+                    .lastActiveDate(LocalDate.now())
+                    .allBadgesJson("[]")
+                    .createdAt(LocalDate.now())
+                    .updatedAt(LocalDate.now())
+                    .build();
+        }
     }
 
     private void updateUserProgress(int points, int correctAnswers, int totalQuestions) {
@@ -162,13 +191,13 @@ public class SessionPersistenceService {
         List<String> badges = fromJson(progress.getAllBadgesJson(), new TypeReference<List<String>>() {});
         if (badges == null) badges = new ArrayList<>();
 
-        if (progress.getTotalSessions() >= 1 && !badges.contains("First Steps")) badges.add("First Steps");
-        if (progress.getTotalSessions() >= 5 && !badges.contains("Curious Learner")) badges.add("Curious Learner");
-        if (progress.getTotalSessions() >= 10 && !badges.contains("Knowledge Seeker")) badges.add("Knowledge Seeker");
-        if (progress.getCurrentStreak() >= 3 && !badges.contains("3-Day Streak")) badges.add("3-Day Streak");
-        if (progress.getCurrentStreak() >= 7 && !badges.contains("7-Day Streak")) badges.add("7-Day Streak");
-        if (progress.getTotalPoints() >= 100 && !badges.contains("Century Club")) badges.add("Century Club");
-        if (progress.getTotalPoints() >= 500 && !badges.contains("Knowledge Master")) badges.add("Knowledge Master");
+        if (progress.getTotalSessions() >= 1  && !badges.contains("First Steps"))       badges.add("First Steps");
+        if (progress.getTotalSessions() >= 5  && !badges.contains("Curious Learner"))   badges.add("Curious Learner");
+        if (progress.getTotalSessions() >= 10 && !badges.contains("Knowledge Seeker"))  badges.add("Knowledge Seeker");
+        if (progress.getCurrentStreak() >= 3  && !badges.contains("3-Day Streak"))      badges.add("3-Day Streak");
+        if (progress.getCurrentStreak() >= 7  && !badges.contains("7-Day Streak"))      badges.add("7-Day Streak");
+        if (progress.getTotalPoints() >= 100  && !badges.contains("Century Club"))      badges.add("Century Club");
+        if (progress.getTotalPoints() >= 500  && !badges.contains("Knowledge Master"))  badges.add("Knowledge Master");
         if (progress.getTotalCorrectAnswers() >= 20 && !badges.contains("Quiz Champion")) badges.add("Quiz Champion");
 
         progress.setAllBadgesJson(toJson(badges));
@@ -178,10 +207,10 @@ public class SessionPersistenceService {
 
     // ─── Points calculation ──────────────────────────────────────────────────
     private int calculatePoints(int correct, int total) {
-        if (total == 0) return 10; // points for completing a session
+        if (total == 0) return 10;
         int base = correct * 15;
-        int bonus = (correct == total) ? 20 : 0; // perfect score bonus
-        return base + bonus + 10; // +10 for completing
+        int bonus = (correct == total) ? 20 : 0;
+        return base + bonus + 10;
     }
 
     // ─── JSON helpers ────────────────────────────────────────────────────────

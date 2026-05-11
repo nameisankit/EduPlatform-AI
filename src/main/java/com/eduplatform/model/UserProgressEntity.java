@@ -16,14 +16,18 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "user_progress")
+@Table(name = "user_progress", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "username")
+})
 public class UserProgressEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String username;
+
     private int totalPoints;
     private int totalSessions;
     private int totalCorrectAnswers;
