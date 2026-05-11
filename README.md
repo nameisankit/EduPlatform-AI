@@ -4,6 +4,11 @@ AI-powered educational backend platform built using **Spring Boot 3**, **Java 21
 
 ---
 
+
+## 🚀 Live Demo
+
+🔗 [EduPlatform-AI Live](https://eduplatform-ai.onrender.com/)
+
 # ✨ Features
 
 * 🤖 AI-powered quiz generation
