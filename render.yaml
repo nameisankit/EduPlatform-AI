@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: eduplatform-ai
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: SERVER_PORT
+        value: 8080
+    autoDeploy: true

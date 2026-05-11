@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPlatform AI 🎓</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- ─────────────── SIDEBAR ─────────────────────────────────── -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-icon">⚙️</span>
+            <h2>Learning Settings</h2>
+        </div>
+
+        <form method="post" th:action="@{/learn}" id="learnForm" onsubmit="showLoading()">
+            <div class="form-group">
+                <label class="form-label">📚 Enter a Topic</label>
+                <input type="text" name="topic" class="form-input"
+                       placeholder="e.g. Neural Networks, Photosynthesis, Blockchain..."
+                       th:value="${memory != null ? memory.topic : ''}"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">🎯 Student Level</label>
+                <div class="level-selector">
+                    <label class="level-option">
+                        <input type="radio" name="level" value="beginner"
+                               th:checked="${memory == null || memory.level == 'beginner'}">
+                        <span>Beginner</span>
+                    </label>
+                    <label class="level-option">
+                        <input type="radio" name="level" value="intermediate"
+                               th:checked="${memory != null && memory.level == 'intermediate'}">
+                        <span>Intermediate</span>
+                    </label>
+                    <label class="level-option">
+                        <input type="radio" name="level" value="advanced"
+                               th:checked="${memory != null && memory.level == 'advanced'}">
+                        <span>Advanced</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">🌍 Language</label>
+                <select name="language" class="form-input">
+                    <option value="English" th:selected="${memory == null || memory.language == 'English' || memory.language == null}">English</option>
+                    <option value="Hindi" th:selected="${memory != null && memory.language == 'Hindi'}">Hindi</option>
+                    <option value="Spanish" th:selected="${memory != null && memory.language == 'Spanish'}">Spanish</option>
+                    <option value="French" th:selected="${memory != null && memory.language == 'French'}">French</option>
+                    <option value="German" th:selected="${memory != null && memory.language == 'German'}">German</option>
+                    <option value="Japanese" th:selected="${memory != null && memory.language == 'Japanese'}">Japanese</option>
+                    <option value="Chinese" th:selected="${memory != null && memory.language == 'Chinese'}">Chinese</option>
+                    <option value="Portuguese" th:selected="${memory != null && memory.language == 'Portuguese'}">Portuguese</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="toggle-label">
+                    <input type="checkbox" name="generateImage" value="true" checked class="toggle-input">
+                    <span class="toggle-switch"></span>
+                    <span>🖼️ Generate Visual</span>
+                </label>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <button type="submit" class="btn-primary">🚀 Start Learning!</button>
+        </form>
+
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <div th:if="${memory != null && memory.suggestedLevel != null}" class="alert alert-info" style="font-size:0.82rem">
+            💡 Based on your quiz, try <strong th:text="${memory.suggestedLevel}"></strong> level next!
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Gamification Stats -->
+        <div th:if="${userProgress != null}" class="gamification-section">
+            <h3>🏆 Your Stats</h3>
+            <div class="stat-row"><span class="stat-icon">⭐</span><span class="stat-value" th:text="${userProgress.totalPoints}">0</span><span class="stat-label">Points</span></div>
+            <div class="stat-row"><span class="stat-icon">🔥</span><span class="stat-value" th:text="${userProgress.currentStreak}">0</span><span class="stat-label">Streak</span></div>
+            <div class="stat-row"><span class="stat-icon">📚</span><span class="stat-value" th:text="${userProgress.totalSessions}">0</span><span class="stat-label">Sessions</span></div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Dark Mode Toggle -->
+        <div class="form-group">
+            <label class="toggle-label">
+                <input type="checkbox" id="darkModeToggle" class="toggle-input" onchange="toggleDarkMode()">
+                <span class="toggle-switch"></span>
+                <span>🌙 Dark Mode</span>
+            </label>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Pipeline Architecture -->
+        <div class="pipeline-section">
+            <h3>🔄 Agent Pipeline</h3>
+            <div class="pipeline-step">
+                <div class="pipeline-icon">🤖</div>
+                <div class="pipeline-text">
+                    <strong>GenAI</strong>
+                    <small>Groq + Pollinations</small>
+                </div>
+            </div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">
+                <div class="pipeline-icon">📋</div>
+                <div class="pipeline-text">
+                    <strong>Curriculum</strong>
+                    <small>Builds roadmap</small>
+                </div>
+            </div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">
+                <div class="pipeline-icon">📖</div>
+                <div class="pipeline-text">
+                    <strong>Tutor</strong>
+                    <small>Delivers lesson</small>
+                </div>
+            </div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">
+                <div class="pipeline-icon">❓</div>
+                <div class="pipeline-text">
+                    <strong>Quiz</strong>
+                    <small>Tests knowledge</small>
+                </div>
+            </div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">
+                <div class="pipeline-icon">✅</div>
+                <div class="pipeline-text">
+                    <strong>Feedback</strong>
+                    <small>Evaluates answers</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-footer">
+            🐳 Deployed via Docker + GitHub Actions + Render
+        </div>
+    </aside>
+
+    <!-- ─────────────── MAIN CONTENT ─────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- Header Banner — exact Streamlit match -->
+        <div class="main-header">
+            <h1>🎓 EduPlatform AI</h1>
+            <p>Multimodal Learning · Multi-Agent Pipeline · Cloud-Deployed</p>
+            <div class="badge-row">
+                <span class="agent-badge badge-genai">🤖 GenAI (Groq + Pollinations)</span>
+                <span class="agent-badge badge-curriculum">📋 Curriculum Agent</span>
+                <span class="agent-badge badge-tutor">📖 Tutor Agent</span>
+                <span class="agent-badge badge-quiz">❓ Quiz Agent</span>
+                <span class="agent-badge badge-feedback">✅ Feedback Agent</span>
+            </div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display:none">
+            <div class="loading-card">
+                <div class="spinner"></div>
+                <h3>🧠 Running Multi-Agent Pipeline...</h3>
+                <div class="loading-steps">
+                    <div class="loading-step active" id="ls1">📋 GenAI: Generating structured content...</div>
+                    <div class="loading-step" id="ls2">📖 Tutor Agent: Writing lesson...</div>
+                    <div class="loading-step" id="ls3">❓ Quiz Agent: Creating questions...</div>
+                    <div class="loading-step" id="ls4">🎨 Generating visual...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ LANDING STATE — exact Streamlit match ══════════════════════ -->
+        <div th:if="${memory == null}" class="landing-state">
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="info-card-icon">🤖</div>
+                    <h3>GenAI Layer</h3>
+                    <p>Groq (Llama3) generates structured explanations and Pollinations.ai creates visual diagrams for every topic.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">🤝</div>
+                    <h3>Multi-Agent Layer</h3>
+                    <p>Four specialized AI agents collaborate: Curriculum Designer → Tutor → Quiz Master → Learning Coach.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">🚀</div>
+                    <h3>DevOps Layer</h3>
+                    <p>Dockerized, CI/CD via GitHub Actions, auto-deployed to Render on every push to main.</p>
+                </div>
+            </div>
+            <!-- Recent Sessions -->
+            <div th:if="${recentSessions != null && !recentSessions.isEmpty()}" class="dashboard-section">
+                <h2 class="tab-title">📊 Recent Sessions</h2>
+                <div class="session-list">
+                    <div th:each="s : ${recentSessions}" class="session-item">
+                        <form method="post" th:action="@{/session/load}" style="display:flex;align-items:center;gap:0.75rem;width:100%">
+                            <input type="hidden" name="sessionId" th:value="${s.id}">
+                            <button type="submit" class="session-item-btn">
+                                <span class="session-topic" th:text="${s.topic}">Topic</span>
+                                <span class="session-meta"><span th:text="${s.level}"></span> · <span th:text="${#temporals.format(s.createdAt, 'MMM dd, HH:mm')}"></span></span>
+                                <span class="session-points">⭐ <span th:text="${s.points}">0</span></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="landing-divider">
+            <div class="landing-hint">
+                👈 Enter a topic and click <strong>Start Learning!</strong>
+            </div>
+        </div>
+
+        <!-- ═══ CONTENT TABS ════════════════════════════════════════════════ -->
+        <div th:if="${memory != null}" class="tabs-container">
+
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="curriculum">📋 Curriculum</button>
+                <button class="tab-btn" data-tab="lesson">📖 Lesson</button>
+                <button class="tab-btn" data-tab="visual">🖼️ Visual</button>
+                <button class="tab-btn" data-tab="quiz" th:classappend="${quizSubmitted} ? ' quiz-done' : ''">❓ Quiz</button>
+                <button class="tab-btn" data-tab="chat">💬 Ask Tutor</button>
+                <button class="tab-btn" data-tab="flashcards">🃏 Flashcards</button>
+                <button class="tab-btn" data-tab="summary">📝 Summary</button>
+                <button class="tab-btn" data-tab="related">🔗 Related</button>
+                <button class="tab-btn" data-tab="bookmarks">🔖 Bookmarks</button>
+                <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
+            </div>
+
+            <!-- ── TAB 1: Curriculum ──────────────────────────────────── -->
+            <div class="tab-content active" id="tab-curriculum">
+                <div class="tab-header-row">
+                    <h2 class="tab-title">📋 Roadmap: <span th:text="${memory.topic}"></span></h2>
+                    <a th:href="@{/export/pdf}" class="btn-secondary btn-sm" target="_blank">📄 Export PDF</a>
+                </div>
+                <div class="two-col">
+                    <div class="col-main">
+                        <div class="markdown-body" th:data-md="${memory.curriculum}"></div>
+                    </div>
+                    <div class="col-side" th:if="${memory.structuredContent != null}">
+                        <div class="key-points-card">
+                            <h3>🎯 Key Points</h3>
+                            <ul th:if="${memory.structuredContent.keyPoints != null}">
+                                <li th:each="pt : ${memory.structuredContent.keyPoints}" th:text="${pt}"></li>
+                            </ul>
+                        </div>
+                        <div class="key-points-card" th:if="${memory.structuredContent.prerequisites != null}">
+                            <h3>📌 Prerequisites</h3>
+                            <ul>
+                                <li th:each="pr : ${memory.structuredContent.prerequisites}" th:text="${pr}"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB 2: Lesson ─────────────────────────────────────── -->
+            <div class="tab-content" id="tab-lesson">
+                <div class="tab-header-row">
+                    <h2 class="tab-title">📖 Lesson: <span th:text="${memory.topic}"></span></h2>
+                    <div class="tab-actions">
+                        <button class="btn-secondary btn-sm" onclick="speakLesson()">🔊 Listen</button>
+                        <button class="btn-secondary btn-sm" onclick="stopSpeaking()">⏹ Stop</button>
+                    </div>
+                </div>
+                <div th:if="${memory.structuredContent != null && memory.structuredContent.explanation != null}"
+                     class="genai-overview">
+                    <details>
+                        <summary>🤖 GenAI Quick Overview</summary>
+                        <p th:text="${memory.structuredContent.explanation}"></p>
+                    </details>
+                </div>
+                <hr class="divider">
+                <div class="markdown-body" th:data-md="${memory.lesson}"></div>
+            </div>
+
+            <!-- ── TAB 3: Visual ─────────────────────────────────────── -->
+            <div class="tab-content" id="tab-visual">
+                <h2 class="tab-title">🖼️ AI-Generated Visual</h2>
+                <div th:if="${memory.imageUrl != null}" class="visual-container">
+                    <img th:src="${memory.imageUrl}"
+                         th:alt="'Visual: ' + ${memory.topic}"
+                         class="generated-image"
+                         onerror="this.style.display='none'; document.getElementById('imgError').style.display='block'; document.getElementById('retryBtn').style.display='inline-block'">
+                    <div id="imgError" style="display:none" class="alert alert-info">
+                        Image failed to load. Pollinations.ai may be temporarily unavailable.
+                        <button id="retryBtn" style="display:none; margin-left:10px;" onclick="location.reload()">Retry</button>
+                    </div>
+                    <details th:if="${memory.imagePrompt != null}" class="prompt-details">
+                        <summary>📝 Image Prompt Used</summary>
+                        <code th:text="${memory.imagePrompt}"></code>
+                    </details>
+                </div>
+                <div th:if="${memory.imageUrl == null}" class="alert alert-info">
+                    Enable '🖼️ Generate Visual' in the sidebar and re-run to get an AI image.
+                </div>
+            </div>
+
+            <!-- ── TAB 4: Quiz ────────────────────────────────────────── -->
+            <div class="tab-content" id="tab-quiz">
+                <h2 class="tab-title">❓ Knowledge Check: <span th:text="${memory.topic}"></span></h2>
+
+                <div th:if="${!quizSubmitted}" id="quizFormContainer">
+                    <form method="post" th:action="@{/quiz/submit}" id="quizForm">
+                        <div th:if="${memory.quiz != null && memory.quiz.questions != null}"
+                             th:each="q : ${memory.quiz.questions}" class="question-block">
+                            <p class="question-text">
+                                <strong th:text="'Q' + ${q.id} + '. ' + ${q.question}"></strong>
+                            </p>
+                            <div th:if="${q.type == 'mcq'}" class="options-group">
+                                <label th:each="opt : ${q.options}" class="option-label">
+                                    <input type="radio"
+                                           th:name="'q' + ${q.id}"
+                                           th:value="${opt}"
+                                           required>
+                                    <span th:text="${opt}"></span>
+                                </label>
+                            </div>
+                            <div th:if="${q.type == 'short_answer'}" class="short-answer-group">
+                                <textarea th:name="'q' + ${q.id}"
+                                          class="answer-textarea"
+                                          placeholder="Type your answer here..."
+                                          rows="3"></textarea>
+                            </div>
+                            <div class="question-divider"></div>
+                        </div>
+                        <button type="submit" class="btn-primary btn-quiz">📤 Submit Quiz</button>
+                    </form>
+                </div>
+
+                <div th:if="${quizSubmitted}" id="quizResults">
+                    <div class="alert alert-success">✅ Quiz submitted!</div>
+                    <div class="points-card">
+                        <span class="points-icon">⭐</span>
+                        <span class="points-value" th:text="${memory.points}">0</span>
+                        <span class="points-label">Points Earned</span>
+                        <span class="score-detail" th:text="${memory.correctAnswers} + '/' + ${memory.totalQuestions} + ' correct'"></span>
+                    </div>
+                    <div th:if="${memory.suggestedLevel != null}" class="alert alert-info">
+                        💡 Try <strong th:text="${memory.suggestedLevel}"></strong> level next time!
+                    </div>
+                    <div th:if="${memory.quiz != null}"
+                         th:each="q : ${memory.quiz.questions}"
+                         class="question-result">
+                        <div th:if="${q.type == 'mcq'}" class="mcq-result">
+                            <p>
+                                <span th:text="${submittedAnswers != null && submittedAnswers.containsKey(q.id) &&
+                                    #strings.startsWith(submittedAnswers.get(q.id), q.correctAnswer) ? '✅' : '❌'}"></span>
+                                <strong th:text="'Q' + ${q.id} + ': ' + ${q.question}"></strong>
+                            </p>
+                            <p class="answer-note">
+                                <em>Correct answer: <span th:text="${q.correctAnswer}"></span> — <span th:text="${q.explanation}"></span></em>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="section-divider"></div>
+                    <h3>🎯 Detailed Feedback</h3>
+                    <div class="markdown-body" th:data-md="${memory.feedback}"></div>
+                    <form method="post" th:action="@{/learn}" style="margin-top:1.5rem">
+                        <input type="hidden" name="topic" th:value="${memory.topic}">
+                        <input type="hidden" name="level" th:value="${memory.suggestedLevel != null ? memory.suggestedLevel : memory.level}">
+                        <button type="submit" class="btn-secondary">🔄 Try Again</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ── TAB 5: Chat ─────────────────────────────────────────── -->
+            <div class="tab-content" id="tab-chat">
+                <h2 class="tab-title">💬 Ask the Tutor: <span th:text="${memory.topic}"></span></h2>
+                <p class="tab-subtitle">Ask any follow-up questions about the lesson</p>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div th:if="${memory.chatHistory != null}"
+                             th:each="msg : ${memory.chatHistory}"
+                             th:classappend="${msg.role == 'user'} ? ' chat-user' : ' chat-assistant'"
+                             class="chat-bubble">
+                            <div class="chat-avatar" th:text="${msg.role == 'user'} ? '👤' : '🤖'"></div>
+                            <div class="chat-text markdown-body" th:data-md="${msg.content}"></div>
+                        </div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chatInput" class="chat-input"
+                               placeholder="Ask a question about the lesson..."
+                               onkeydown="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()" class="btn-chat">Send ➤</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB 6: Flashcards ─────────────────────────────────────── -->
+            <div class="tab-content" id="tab-flashcards">
+                <h2 class="tab-title">🃏 Flashcards: <span th:text="${memory.topic}"></span></h2>
+                <p class="tab-subtitle">Click a card to flip it</p>
+                <div th:if="${memory.structuredContent != null && memory.structuredContent.keyPoints != null}" class="flashcards-grid">
+                    <div th:each="pt,iter : ${memory.structuredContent.keyPoints}" class="flashcard" onclick="this.classList.toggle('flipped')">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <span class="flashcard-number" th:text="${iter.count}"></span>
+                                <p th:text="${memory.topic}"></p>
+                            </div>
+                            <div class="flashcard-back">
+                                <p th:text="${pt}"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${memory.structuredContent == null || memory.structuredContent.keyPoints == null}" class="alert alert-info">
+                    No key points available. Run a learning session first.
+                </div>
+            </div>
+
+            <!-- ── TAB 7: Summary ─────────────────────────────────────────── -->
+            <div class="tab-content" id="tab-summary">
+                <div class="tab-header-row">
+                    <h2 class="tab-title">📝 TL;DR Summary</h2>
+                    <a th:href="@{/export/pdf}" class="btn-secondary btn-sm" target="_blank">📄 PDF</a>
+                </div>
+                <div th:if="${memory.summary != null}" class="summary-card">
+                    <div class="markdown-body" th:data-md="${memory.summary}"></div>
+                </div>
+                <div th:if="${memory.summary == null}" class="alert alert-info">Summary not available yet.</div>
+            </div>
+
+            <!-- ── TAB 8: Related Topics ─────────────────────────────────── -->
+            <div class="tab-content" id="tab-related">
+                <h2 class="tab-title">🔗 What to Learn Next</h2>
+                <p class="tab-subtitle">AI-suggested topics related to <span th:text="${memory.topic}"></span></p>
+                <div th:if="${memory.relatedTopics != null && !memory.relatedTopics.isEmpty()}" class="related-topics-grid">
+                    <div th:each="topic : ${memory.relatedTopics}" class="related-topic-card">
+                        <span class="related-topic-icon">📚</span>
+                        <form method="post" th:action="@{/learn}" style="display:contents">
+                            <input type="hidden" name="topic" th:value="${topic}">
+                            <input type="hidden" name="level" th:value="${memory.suggestedLevel != null ? memory.suggestedLevel : memory.level}">
+                            <input type="hidden" name="language" th:value="${memory.language != null ? memory.language : 'English'}">
+                            <button type="submit" class="related-topic-btn" th:text="${topic}"></button>
+                        </form>
+                    </div>
+                </div>
+                <div th:if="${memory.relatedTopics == null || memory.relatedTopics.isEmpty()}" class="alert alert-info">No suggestions yet.</div>
+            </div>
+
+            <!-- ── TAB 9: Bookmarks ─────────────────────────────────────────── -->
+            <div class="tab-content" id="tab-bookmarks">
+                <h2 class="tab-title">🔖 Bookmarked Sections</h2>
+                <p class="tab-subtitle">Save important parts for quick review</p>
+                <div th:if="${memory.bookmarks != null && !memory.bookmarks.isEmpty()}" class="bookmarks-list">
+                    <div th:each="bm : ${memory.bookmarks}" class="bookmark-item">
+                        <span class="bookmark-text" th:text="${bm}"></span>
+                        <button class="btn-remove-bookmark" onclick="removeBookmark(this)" th:data-text="${bm}">✕</button>
+                    </div>
+                </div>
+                <div th:if="${memory.bookmarks == null || memory.bookmarks.isEmpty()}" class="alert alert-info">
+                    No bookmarks yet. Select text and click the button below.
+                </div>
+                <div style="margin-top:1rem">
+                    <button class="btn-secondary btn-sm" onclick="bookmarkSelection()">🔖 Bookmark Selected Text</button>
+                </div>
+            </div>
+
+            <!-- ── TAB 10: Dashboard ─────────────────────────────────────────── -->
+            <div class="tab-content" id="tab-dashboard">
+                <h2 class="tab-title">📊 Learning Dashboard</h2>
+                <div th:if="${userProgress != null}" class="dashboard-grid">
+                    <div class="dash-card"><div class="dash-icon">⭐</div><div class="dash-value" th:text="${userProgress.totalPoints}">0</div><div class="dash-label">Total Points</div></div>
+                    <div class="dash-card"><div class="dash-icon">📚</div><div class="dash-value" th:text="${userProgress.totalSessions}">0</div><div class="dash-label">Sessions</div></div>
+                    <div class="dash-card"><div class="dash-icon">🔥</div><div class="dash-value" th:text="${userProgress.currentStreak}">0</div><div class="dash-label">Current Streak</div></div>
+                    <div class="dash-card"><div class="dash-icon">🏆</div><div class="dash-value" th:text="${userProgress.longestStreak}">0</div><div class="dash-label">Longest Streak</div></div>
+                    <div class="dash-card"><div class="dash-icon">✅</div><div class="dash-value" th:text="${userProgress.totalCorrectAnswers}">0</div><div class="dash-label">Correct Answers</div></div>
+                    <div class="dash-card"><div class="dash-icon">❓</div><div class="dash-value" th:text="${userProgress.totalQuestions}">0</div><div class="dash-label">Total Questions</div></div>
+                </div>
+
+                <!-- Badges Section -->
+                <div th:if="${userProgress != null}" class="badges-section">
+                    <h3>🏅 Earned Badges</h3>
+                    <div class="badges-grid" id="badgesGrid">
+                        <div class="badge-card" th:each="badge : ${earnedBadges}">
+                            <span class="badge-emoji">🏅</span>
+                            <span class="badge-name" th:text="${badge}"></span>
+                        </div>
+                    </div>
+                    <div th:if="${earnedBadges == null || earnedBadges.isEmpty()}" class="alert alert-info">Complete sessions and quizzes to earn badges!</div>
+                </div>
+
+                <!-- Recent Sessions -->
+                <div th:if="${recentSessions != null && !recentSessions.isEmpty()}" class="recent-sessions-section">
+                    <h3>📖 Recent Sessions</h3>
+                    <div class="session-list">
+                        <div th:each="s : ${recentSessions}" class="session-item">
+                            <form method="post" th:action="@{/session/load}" style="display:flex;align-items:center;gap:0.75rem;width:100%">
+                                <input type="hidden" name="sessionId" th:value="${s.id}">
+                                <button type="submit" class="session-item-btn">
+                                    <span class="session-topic" th:text="${s.topic}">Topic</span>
+                                    <span class="session-meta"><span th:text="${s.level}"></span> · <span th:text="${#temporals.format(s.createdAt, 'MMM dd, HH:mm')}"></span></span>
+                                    <span class="session-points">⭐ <span th:text="${s.points}">0</span></span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(function(btn) {
+        btn.onclick = function() {
+            const target = this.getAttribute('data-tab');
+            tabBtns.forEach(function(b) { b.classList.remove('active'); });
+            this.classList.add('active');
+            tabContents.forEach(function(c) { c.classList.remove('active'); });
+            const targetContent = document.getElementById('tab-' + target);
+            if (targetContent) targetContent.classList.add('active');
+        };
+    });
+
+    // Dark mode from localStorage
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        var toggle = document.getElementById('darkModeToggle');
+        if (toggle) toggle.checked = true;
+    }
+});
+
+// ─── Dark Mode ────────────────────────────────────────────────────────────
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+}
+
+// ─── Audio Narration ──────────────────────────────────────────────────────
+function speakLesson() {
+    var lessonTab = document.getElementById('tab-lesson');
+    if (!lessonTab) return;
+    var text = lessonTab.innerText;
+    if ('speechSynthesis' in window) {
+        stopSpeaking();
+        var utterance = new SpeechSynthesisUtterance(text.substring(0, 5000));
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+    } else {
+        alert('Text-to-speech not supported in this browser.');
+    }
+}
+
+function stopSpeaking() {
+    if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+    }
+}
+
+// ─── Bookmark Selection ───────────────────────────────────────────────────
+function bookmarkSelection() {
+    var selection = window.getSelection();
+    var text = selection.toString().trim();
+    if (!text) {
+        alert('Select some text first, then click Bookmark.');
+        return;
+    }
+    fetch('/bookmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.bookmarks) {
+            alert('Bookmarked!');
+            location.reload();
+        }
+    });
+}
+
+function removeBookmark(btn) {
+    var text = btn.getAttribute('data-text');
+    fetch('/bookmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.bookmarks) location.reload();
+    });
+}
+</script>
+</body>
+</html>
